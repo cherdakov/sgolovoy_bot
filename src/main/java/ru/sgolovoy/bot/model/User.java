@@ -6,14 +6,23 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
-@Entity
-@Table(name = "user", schema = "bot")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@Entity
+@Table(name = "user", schema = "bot")
 public class User {
     @Id
     private Long id;
+
     @Column(name = "name")
     private String name;
+
+    @Column(name = "is_trainer")
+    private Boolean isTrainer = false;
+
+    public User(Long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 }

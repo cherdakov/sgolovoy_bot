@@ -3,15 +3,15 @@ package ru.sgolovoy.bot.telegram;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
-import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import ru.sgolovoy.bot.service.QueueService;
 import ru.sgolovoy.bot.service.TelegramBotService;
-import ru.sgolovoy.bot.service.UserService;
 
 @Service
 @Slf4j
@@ -22,19 +22,26 @@ public class Bot extends TelegramLongPollingBot {
     @Value("${bot.token}")
     private String botToken;
 
-    private final TelegramBotService telegramBotService;
+    private final QueueService queueService;
 
-    public Bot(TelegramBotService telegramBotService) {
+    public Bot(QueueService queueService) {
         super();
-        this.telegramBotService = telegramBotService;
+        this.queueService = queueService;
     }
-
 
     @SneakyThrows
     @Override
     public void onUpdateReceived(Update update) {
-        BotApiMethod botApiMethod = telegramBotService.onUpdateReceived(update);
-        sendApiMethod(botApiMethod);
+        queueService.put(update);
+    }
+
+    public void sendMessage(SendMessage sendMessage, String chatId) {
+        sendMessage.setChatId(chatId);
+        try {
+            execute(sendMessage);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 
     public String getBotUsername() {

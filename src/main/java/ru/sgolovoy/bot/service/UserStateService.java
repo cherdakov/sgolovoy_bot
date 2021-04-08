@@ -1,14 +1,16 @@
 package ru.sgolovoy.bot.service;
 
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import ru.sgolovoy.bot.model.Context;
 import ru.sgolovoy.bot.model.State;
 import ru.sgolovoy.bot.model.UserState;
 import ru.sgolovoy.bot.repository.UserStateRepository;
 
-import java.util.Optional;
-
-import static ru.sgolovoy.bot.model.State.*;
+import static ru.sgolovoy.bot.model.State.COMMIT_TRAINING;
+import static ru.sgolovoy.bot.model.State.INTRODUCE;
+import static ru.sgolovoy.bot.model.State.MAIN_MENU;
+import static ru.sgolovoy.bot.model.State.SET_TRAINING_TIME;
+import static ru.sgolovoy.bot.model.State.SET_TRAINING_TYPE;
 
 @Service
 public class UserStateService {
@@ -26,30 +28,24 @@ public class UserStateService {
         switch (state) {
             case TRAINING_INFO:
                 return COMMIT_TRAINING;
+            case SET_TRAINING_TYPE:
+                return SET_TRAINING_TIME;
+            case PICK_TRAINING_TO_EDIT:
+                return SET_TRAINING_TYPE;
         }
         return MAIN_MENU;
     }
 
-    public UserState toNextState(Long userId) {
-        Optional<UserState> oldState = userStateRepository.findById(userId);
-        State nextState = getNextState(oldState.map(UserState::getState).orElse(null));
-        UserState userState = new UserState(userId, nextState);
-        userStateRepository.save(userState);
-        return userState;
+    public void toNextState(Context context) {
+        UserState userState = context.getUserState();
+        userState.setState(getNextState(userState.getState()));
+        setState(context);
     }
 
-    public UserState setState(Long userId, State state) {
-        userStateRepository.save(new UserState(userId, state));
-        return new UserState(userId, state);
+    public void setState(Context context) {
+        userStateRepository.save(context.getUserState());
     }
 
-    public SendMessage getCurrentStateDefaultMessage(State state) {
-        switch (state) {
-            case INTRODUCE:
-                return Utils.sendMessage("Представьтесь, пожалуйста");
-        }
-        return Utils.sendMessage("Тут должно быть главное меню");
-    }
 
     public UserState getState(Long tgId) {
         return userStateRepository.getOne(tgId);

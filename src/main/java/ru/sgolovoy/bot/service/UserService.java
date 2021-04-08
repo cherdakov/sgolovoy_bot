@@ -1,15 +1,11 @@
 package ru.sgolovoy.bot.service;
 
-import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Chat;
-import org.telegram.telegrambots.meta.api.objects.Update;
-import ru.sgolovoy.bot.model.State;
-import ru.sgolovoy.bot.model.User;
-import ru.sgolovoy.bot.model.UserState;
-import ru.sgolovoy.bot.repository.UserRepository;
-
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import ru.sgolovoy.bot.model.Context;
+import ru.sgolovoy.bot.model.User;
+import ru.sgolovoy.bot.repository.UserRepository;
 
 @Service
 public class UserService {
@@ -22,35 +18,23 @@ public class UserService {
         this.userStateService = userStateService;
     }
 
-    public SendMessage handleStart(Update update) {
-        Long tgId = update.getMessage().getFrom().getId();
-        Optional<User> schoolUser = userRepository.findById(tgId);
-        if (schoolUser.isPresent()) {
-            return Utils.sendWelcomeBack(schoolUser.get().getName());
-        } else {
-            UserState userState = userStateService.toNextState(tgId);
-            return userStateService.getCurrentStateDefaultMessage(userState.getState());
-        }
+    public Optional<User> getUser(long tgIg) {
+        return userRepository.findById(tgIg);
     }
 
-    public SendMessage handleChangeName(Update update) {
-        Long tgId = update.getMessage().getFrom().getId();
-        UserState userState = userStateService.setState(tgId, State.INTRODUCE);
-        return userStateService.getCurrentStateDefaultMessage(userState.getState());
+    public void updateName(Context context) {
+        String name = context.getData();
+        userRepository.save(new User(context.getTgId(), name));
+        context.setUserName(name);
     }
 
-
-    public SendMessage handleName(Update update) {
-        Long tgId = update.getMessage().getFrom().getId();
-        Optional<User> schoolUser = userRepository.findById(tgId);
+    public void handleName(Context update) {
+        Optional<User> schoolUser = userRepository.findById(update.getTgId());
         String name = schoolUser.get().getName();
-        return Utils.reply(name);
     }
 
-    public SendMessage updateName(User user) {
+    public void updateName(User user) {
         userRepository.save(user);
-        UserState userState = userStateService.toNextState(user.getId());
-        return userStateService.getCurrentStateDefaultMessage(userState.getState());
     }
 
 }

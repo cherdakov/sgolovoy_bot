@@ -46,8 +46,7 @@ public class UserStateService {
         userStateRepository.save(context.getUserState());
     }
 
-
     public UserState getState(Long tgId) {
-        return userStateRepository.getOne(tgId);
+        return userStateRepository.findById(tgId).orElse(new UserState(tgId, State.NONE));
     }
 }

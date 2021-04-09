@@ -1,6 +1,7 @@
 package ru.sgolovoy.bot.model;
 
 public enum State {
+    NONE,
     TRAINING_INFO,
     COMMIT_TRAINING,
     MAIN_MENU,

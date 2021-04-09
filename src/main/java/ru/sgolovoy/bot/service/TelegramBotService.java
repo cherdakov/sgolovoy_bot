@@ -75,8 +75,7 @@ public class TelegramBotService {
 
 
     void tryHandleState(Context context) {
-        UserState userState = userStateService.getState(context.getTgId());
-        switch (userState.getState()) {
+        switch (context.getUserState().getState()) {
             case INTRODUCE:
                 userService.updateName(context);
                 break;
